@@ -1,0 +1,49 @@
+version: 2
+
+project_name: portwatch
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: portwatch
+    main: ./cmd/portwatch
+    binary: portwatch
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+      - -X github.com/SenorLawyer/portwatcher/internal/version.Version={{.Version}}
+      - -X github.com/SenorLawyer/portwatcher/internal/version.Commit={{.Commit}}
+      - -X github.com/SenorLawyer/portwatcher/internal/version.Date={{.Date}}
+
+archives:
+  - id: default
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: SenorLawyer
+    name: portwatcher
+  mode: append
+  name_template: "portwatch {{ .Env.PORTWATCH_VERSION }}"
