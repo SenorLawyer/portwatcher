@@ -1,0 +1,141 @@
+name: Version Packages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  version-packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          # Use a fine-grained PAT (VERSION_PAT) so the version-packages PR
+          # triggers other workflows such as CI. Falls back to the default
+          # token (PRs created by that token will NOT trigger CI on the PR).
+          token: ${{ secrets.VERSION_PAT || github.token }}
+
+      - name: Detect mode
+        id: detect
+        run: |
+          commit_subject=$(git log -1 --pretty=%s)
+          if echo "$commit_subject" | grep -qE "Version Packages v[0-9]+\.[0-9]+\.[0-9]+"; then
+            version=$(echo "$commit_subject" | grep -oE "v[0-9]+\.[0-9]+\.[0-9]+" | head -1)
+            echo "mode=release" >> "$GITHUB_OUTPUT"
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          elif find .bumpy -maxdepth 1 -name "*.md" ! -name "_*" 2>/dev/null | grep -q .; then
+            echo "mode=prepare" >> "$GITHUB_OUTPUT"
+          else
+            echo "mode=none" >> "$GITHUB_OUTPUT"
+          fi
+
+      # ── Release: version-packages PR was merged → tag → goreleaser fires ──
+      - name: Create release tag
+        if: steps.detect.outputs.mode == 'release'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          tag="${{ steps.detect.outputs.version }}"
+          if git rev-parse "$tag" >/dev/null 2>&1; then
+            echo "Tag $tag already exists, skipping"
+          else
+            git tag "$tag"
+            git push origin "$tag"
+          fi
+
+      # ── Prepare: bump files present → compute version, create PR ──────────
+      - name: Compute new version
+        if: steps.detect.outputs.mode == 'prepare'
+        id: semver
+        run: |
+          current=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+          major=$(echo "$current" | sed 's/^v//' | cut -d. -f1)
+          minor=$(echo "$current" | cut -d. -f2)
+          patch=$(echo "$current" | cut -d. -f3)
+
+          bump=patch
+          for f in .bumpy/*.md; do
+            [[ "$f" == .bumpy/_* ]] && continue
+            [ -f "$f" ] || continue
+            level=$(awk '/^---/{p++; next} p==1 && /^bump:/{print $2; exit}' "$f")
+            case "$level" in
+              major) bump=major; break ;;
+              minor) [ "$bump" != "major" ] && bump=minor ;;
+            esac
+          done
+
+          case "$bump" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            *)     patch=$((patch+1)) ;;
+          esac
+
+          echo "new_version=v${major}.${minor}.${patch}" >> "$GITHUB_OUTPUT"
+
+      - name: Prepare version-packages branch
+        if: steps.detect.outputs.mode == 'prepare'
+        env:
+          GH_TOKEN: ${{ secrets.VERSION_PAT || github.token }}
+          NEW_VERSION: ${{ steps.semver.outputs.new_version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B version-packages
+
+          python3 - << 'PYEOF'
+import os, datetime
+
+entries = []
+for fname in sorted(os.listdir('.bumpy')):
+    if not fname.endswith('.md') or fname.startswith('_'):
+        continue
+    with open(f'.bumpy/{fname}') as f:
+        content = f.read()
+    parts = content.split('---', 2)
+    body = parts[2].strip() if len(parts) >= 3 else content.strip()
+    if body:
+        entries.append(body)
+
+version = os.environ['NEW_VERSION']
+date = datetime.date.today().isoformat()
+section = f"## {version} - {date}\n\n" + "\n\n".join(entries) + "\n"
+
+if os.path.exists('CHANGELOG.md'):
+    with open('CHANGELOG.md') as f:
+        existing = f.read()
+    if existing.startswith('# Changelog'):
+        first_line, rest = existing.split('\n', 1)
+        new_content = first_line + '\n\n' + section + '\n' + rest.lstrip('\n')
+    else:
+        new_content = section + '\n' + existing
+else:
+    new_content = f"# Changelog\n\n{section}"
+
+with open('CHANGELOG.md', 'w') as f:
+    f.write(new_content)
+PYEOF
+
+          find .bumpy -maxdepth 1 -name "*.md" ! -name "_*" -delete
+
+          git add -A
+          git commit -m "Version Packages ${NEW_VERSION}"
+          git push origin version-packages --force
+
+          if gh pr view version-packages --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
+            gh pr edit version-packages \
+              --title "Version Packages ${NEW_VERSION}" \
+              --body "Automated release prep — merging this PR will publish **${NEW_VERSION}**." \
+              --repo "$GITHUB_REPOSITORY"
+          else
+            gh pr create \
+              --title "Version Packages ${NEW_VERSION}" \
+              --body "Automated release prep — merging this PR will publish **${NEW_VERSION}**." \
+              --base main \
+              --head version-packages \
+              --repo "$GITHUB_REPOSITORY"
+          fi
