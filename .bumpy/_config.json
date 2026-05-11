@@ -19,7 +19,6 @@
     "portwatcher": {
       "managed": true,
       "skipNpmPublish": true,
-      "publishCommand": "git rev-parse \"v{{version}}\" >/dev/null 2>&1 || git tag \"v{{version}}\"",
       "changedFilePatterns": ["**"]
     }
   },
