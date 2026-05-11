@@ -1,0 +1,27 @@
+name: bumpy release
+
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: bumpy-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.BUMPY_GH_TOKEN || github.token }}
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bunx @varlock/bumpy ci release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUMPY_GH_TOKEN: ${{ secrets.BUMPY_GH_TOKEN }}

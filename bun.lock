@@ -1,0 +1,15 @@
+{
+  "lockfileVersion": 1,
+  "configVersion": 1,
+  "workspaces": {
+    "": {
+      "name": "portwatcher",
+      "devDependencies": {
+        "@varlock/bumpy": "^1.8.0",
+      },
+    },
+  },
+  "packages": {
+    "@varlock/bumpy": ["@varlock/bumpy@1.8.0", "", { "bin": { "bumpy": "dist/cli.mjs" } }, "sha512-fpq3nT+5DWQfP1i0kUmtMiZ/94ev5fGQj98wQiCRKfeihscYaUF0rapCpouS+qGPrXl7AOHeibRCTQW1po0Tdw=="],
+  }
+}

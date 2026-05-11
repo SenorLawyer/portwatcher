@@ -49,17 +49,26 @@ Prerequisites:
 
 - Go 1.25+
 - Docker, optional for container mapping
+- Bun and bumpy for release bookkeeping
 - GoReleaser, optional for local release checks
 
 ```bash
-go test ./...
-go vet ./...
+bun run check
 go run ./cmd/portwatch
 ```
 
 ## Release
 
-Releases are Go-native. Run the `release` workflow with a SemVer version like `0.1.0`; it creates `v0.1.0` and builds binaries with GoReleaser.
+Releases are managed with bumpy and GoReleaser. Bumpy opens and updates a single `bumpy/version-packages` PR with version and changelog changes; merging that PR creates a `v*` tag, and GoReleaser publishes the Go binaries from the tag.
+
+Release-significant PRs should include a `.bumpy/*.md` bump file using the `portwatcher` package name:
+
+```bash
+bunx bumpy add --packages "portwatcher:patch" --message "Fixed local port display." --name "fix-port-display"
+bunx bumpy status
+```
+
+Set the repository secret `BUMPY_GH_TOKEN` so CI runs on generated version PRs and the generated `v*` tag can trigger GoReleaser. Do not edit `CHANGELOG.md` manually; bumpy updates it when the version PR is created.
 
 For a local package check:
 
