@@ -23,7 +23,7 @@ Brief changelog description of the change.
 
 Bump levels:
 - `patch` — bug fixes, docs, cleanup, dependency updates
-- `minor` — new user-facing features or behaviour
+- `minor` — new user-facing features or behavior
 - `major` — breaking changes to the CLI, config, or output format
 
 Files inside `.bumpy/` whose names start with `_` (e.g. `_config.json`) are reserved for tooling and are never treated as bump files.
