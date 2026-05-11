@@ -9,7 +9,7 @@
 
 ## Release Flow
 
-PRs that contain user-visible changes must include a bump file at `.bumpy/<short-description>.md`:
+All PRs must include a bump file at `.bumpy/<short-description>.md` (except the auto-generated `version-packages` PR):
 
 ```yaml
 ---
@@ -18,4 +18,4 @@ bump: minor
 Brief changelog description of the change.
 ```
 
-When a PR merges to `main`, CI automatically creates (or updates) a `version-packages` PR that applies the version bump and updates `CHANGELOG.md`. Merging that PR triggers the actual release via GoReleaser.
+When PRs merge to `main`, CI automatically keeps a single `version-packages` PR updated from all pending bump files, applies the highest pending bump level (`major` > `minor` > `patch`), and updates `CHANGELOG.md` with all pending bump entries. Merging that PR triggers the actual release via GoReleaser.

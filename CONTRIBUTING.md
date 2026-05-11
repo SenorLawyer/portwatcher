@@ -12,7 +12,7 @@ Keep changes focused. For scanner behavior, prefer provider interfaces and tests
 
 ## Bump files
 
-For any PR that contains a user-visible change, add a bump file at `.bumpy/<short-description>.md`:
+All PRs must include a bump file at `.bumpy/<short-description>.md` (except the auto-generated `version-packages` PR):
 
 ```yaml
 ---
@@ -28,7 +28,7 @@ Bump levels:
 
 Files inside `.bumpy/` whose names start with `_` (e.g. `_config.json`) are reserved for tooling and are never treated as bump files.
 
-When your PR merges to `main`, the **Version Packages** workflow automatically creates (or updates) a `version-packages` PR that bumps the version and updates `CHANGELOG.md`. Merging that PR triggers a GoReleaser release.
+When PRs merge to `main`, the **Version Packages** workflow automatically keeps a single `version-packages` PR updated with all pending bump files, picks the highest bump level across them (`major` > `minor` > `patch`), and updates `CHANGELOG.md` with all pending bump entries. Merging that PR triggers a GoReleaser release.
 
 ### Optional: VERSION_PAT secret
 

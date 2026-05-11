@@ -6,6 +6,24 @@ on:
   pull_request:
 
 jobs:
+  require-bump-file:
+    name: require-bump-file
+    if: github.event_name == 'pull_request' && github.head_ref != 'version-packages'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Ensure PR contains a bump file
+        run: |
+          git fetch --no-tags origin "${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}"
+          if git diff --name-only "refs/remotes/origin/${{ github.base_ref }}...HEAD" | grep -Eq '^\.bumpy/[^_/][^/]*\.md$'; then
+            echo "Bump file found."
+          else
+            echo "Error: PRs must include a .bumpy/<name>.md bump file."
+            exit 1
+          fi
+
   ci-linux:
     name: ci-linux
     runs-on: ubuntu-latest
