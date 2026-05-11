@@ -1,16 +1,17 @@
-name: Bumpy Check
+name: bumpy
 
 on:
   pull_request:
 
 jobs:
   bumpy:
+    name: bumpy
     runs-on: ubuntu-latest
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - uses: oven-sh/setup-bun@v2
       - run: bun install --frozen-lockfile
       - run: bunx @varlock/bumpy ci check --strict

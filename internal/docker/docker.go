@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 
 	"github.com/SenorLawyer/portwatcher/internal/scanner"
@@ -34,7 +35,7 @@ func (e *Enricher) Enrich(ctx scanner.Context, ports []scanner.PortEntry) ([]sca
 	}
 	defer cli.Close()
 
-	containers, err := cli.ContainerList(stdCtx, types.ContainerListOptions{All: false})
+	containers, err := cli.ContainerList(stdCtx, container.ListOptions{All: false})
 	if err != nil {
 		return ports, []string{fmt.Sprintf("docker: %v", err)}
 	}
