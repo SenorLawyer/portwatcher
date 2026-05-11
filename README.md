@@ -12,7 +12,7 @@ The module is `github.com/SenorLawyer/portwatcher`; the binary is `portwatch`.
 - keyboard actions for kill, copy, filter, open, refresh, and history
 - JSON output for scripting
 - JSONL history store with retention
-- GoReleaser config and bumpy release flow
+- GoReleaser release flow
 
 ## Install
 
@@ -49,24 +49,17 @@ Prerequisites:
 
 - Go 1.25+
 - Docker, optional for container mapping
-- bumpy, optional for releases
 - GoReleaser, optional for local release checks
 
 ```bash
 go test ./...
+go vet ./...
 go run ./cmd/portwatch
 ```
 
 ## Release
 
-Releases are managed with bumpy. Release-significant PRs should include a `.bumpy/*.md` bump file.
-
-```bash
-bunx bumpy add --packages "portwatcher:patch" --message "Fixed local port display." --name "fix-port-display"
-bunx bumpy status
-```
-
-Version PRs are opened from `main`. When a `v*` release tag is pushed, GoReleaser builds the binaries.
+Releases are Go-native. Run the `release` workflow with a SemVer version like `0.1.0`; it creates `v0.1.0` and builds binaries with GoReleaser.
 
 For a local package check:
 
