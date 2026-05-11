@@ -25,3 +25,13 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           BUMPY_GH_TOKEN: ${{ secrets.BUMPY_GH_TOKEN }}
+      - name: Push GoReleaser tag
+        run: |
+          version="$(bun -e "console.log(require('./package.json').version)")"
+          tag="v${version}"
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" >/dev/null 2>&1; then
+            echo "${tag} already exists"
+            exit 0
+          fi
+          git tag "${tag}"
+          git push origin "${tag}"
