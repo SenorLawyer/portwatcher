@@ -59,7 +59,16 @@ go run ./cmd/portwatch
 
 ## Release
 
-Releases are Go-native. Run the `release` workflow with a SemVer version like `0.1.0`; it creates `v0.1.0` and builds binaries with GoReleaser.
+Each PR adds a `.bumpy/<short-description>.md` file with:
+
+```yaml
+---
+bump: patch
+---
+Brief changelog description.
+```
+
+When PRs merge to `main`, the Version Packages workflow keeps a single `version-packages` PR updated from pending bump files, selects the highest bump level (`major > minor > patch`), and updates `CHANGELOG.md`. Merging that PR creates a `v*` tag and GoReleaser publishes the release.
 
 For a local package check:
 

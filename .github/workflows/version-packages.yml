@@ -88,6 +88,18 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -B version-packages
 
+          pr_body=$(cat <<EOF
+          Automated release prep for **${NEW_VERSION}**.
+
+          This PR is generated from pending \`.bumpy/*.md\` entries:
+          - picks the highest bump level (\`major > minor > patch\`)
+          - updates \`CHANGELOG.md\` with all pending entries
+          - removes processed bump files
+
+          Merge this PR to publish **${NEW_VERSION}**.
+          EOF
+          )
+
           python3 - << 'PYEOF'
 import os, datetime
 
@@ -133,12 +145,12 @@ PYEOF
           if gh pr view version-packages --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
             gh pr edit version-packages \
               --title "Version Packages ${NEW_VERSION}" \
-              --body "Automated release prep — merging this PR will publish **${NEW_VERSION}**." \
+              --body "$pr_body" \
               --repo "$GITHUB_REPOSITORY"
           else
             gh pr create \
               --title "Version Packages ${NEW_VERSION}" \
-              --body "Automated release prep — merging this PR will publish **${NEW_VERSION}**." \
+              --body "$pr_body" \
               --base main \
               --head version-packages \
               --repo "$GITHUB_REPOSITORY"
