@@ -15,9 +15,9 @@
   },
   "homepage": "https://github.com/SenorLawyer/portwatcher#readme",
   "scripts": {
-    "test": "GOTOOLCHAIN=local go test ./...",
-    "vet": "GOTOOLCHAIN=local go vet ./...",
-    "build": "GOTOOLCHAIN=local go build ./cmd/portwatch",
+    "test": "go test ./...",
+    "vet": "go vet ./...",
+    "build": "go build ./cmd/portwatch",
     "check": "bun run test && bun run vet && bun run build",
     "bumpy": "bumpy",
     "bumpy:check": "bumpy check --strict",
