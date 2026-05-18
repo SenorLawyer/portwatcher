@@ -24,6 +24,6 @@
     "bumpy:status": "bumpy status"
   },
   "devDependencies": {
-    "@varlock/bumpy": "^1.8.0"
+    "@varlock/bumpy": "^1.8.1"
   }
 }
